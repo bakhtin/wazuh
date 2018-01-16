@@ -221,6 +221,19 @@ class WazuhClusterHandler(asynchat.async_chat):
                     agents = None
                     all_agents = ast.literal_eval(args[0])
                 res = rootcheck.clear(agents, all_agents)
+            elif command[0] == MASTER_FORW:
+                args = self.f.decrypt(response[common.cluster_sync_msg_size:])
+                args = args.split(" ")
+                if len(args) == 3:
+                    agent_id = args[0].split("-")
+                    request_type = args[1]
+                    args = args[2:]
+                else:
+                    agent_id = None
+                    request_type = args[1]
+                    args = args[1:]
+                res = "Received from " + self.addr
+                #res = distributed_api_request(request_type, agent_id, args, True)
 
             elif command[0] == 'ready':
                 res = "Starting to sync client's files"
@@ -318,7 +331,7 @@ def crontab_sync_master(interval):
                 # ask clients to send updates
                 message = "ready {0}".format('a'*(common.cluster_protocol_plain_size - len("ready ")))
                 file = None
-            
+
             error, response = send_request(host=node[0], port=config_cluster["port"], key=config_cluster['key'],
                                 data=message, file=file)
 
